@@ -1,5 +1,5 @@
 // Import the Proposal model we created. This is how we interact with the 'proposals' collection.
-const Proposal = require('../models/proposalSchema');
+const Proposal = require('../models/Proposal');
 
 /**
  * @desc    Create a new proposal.

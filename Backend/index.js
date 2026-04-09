@@ -2,8 +2,10 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const colors = require('colors'); // For styled console logs
-const connectDB = require('./config/db');
 const proposalRoutes = require('./routes/proposalRoutes');
+const connectDB = require('./Config/dbConfig');
+const portfolioRoutes = require('./routes/portfolioRoutes'); // <-- ADD THIS LINE
+const aiRoutes = require('./routes/aiRoutes'); // <-- ADD THIS LINE
 
 // Load environment variables from .env file
 dotenv.config();
@@ -35,6 +37,8 @@ app.use(express.urlencoded({ extended: false }));
 // This tells Express that for any request starting with '/api/proposals',
 // it should use the 'proposalRoutes' router we defined earlier.
 app.use('/api/proposals', proposalRoutes);
+app.use('/api/portfolio', portfolioRoutes); // <-- ADD THIS LINE
+app.use('/api/ai', aiRoutes); // <-- ADD THIS LINE
 
 
 // --- Server Initialization ---
