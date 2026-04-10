@@ -32,10 +32,6 @@ const aiLimiter = createRateLimiter({
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-// 1. CORS (Cross-Origin Resource Sharing)
-// Your React frontend (e.g., on localhost:3000) will be on a different
-// "origin" than your backend (e.g., on localhost:5000). This middleware
-// allows the frontend to make API requests to the backend.
 app.use(cors({
     origin(origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
