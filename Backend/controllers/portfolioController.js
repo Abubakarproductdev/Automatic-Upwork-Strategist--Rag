@@ -1,4 +1,4 @@
-const fs = 'fs'.promises; // Use the promise-based version for cleaner async/await
+const fs = require('fs').promises; // <-- THIS IS THE FIX
 const path = require('path');
 
 // Define the path to our context file. 
@@ -45,6 +45,9 @@ exports.getPortfolio = async (req, res) => {
     }
 };
 
+
+// ... keep getPortfolio as it is ...
+
 /**
  * @desc    Update the portfolio data file.
  * @route   POST /api/portfolio
@@ -52,16 +55,33 @@ exports.getPortfolio = async (req, res) => {
  *
  * This function takes the JSON body from the frontend request and writes it to the file,
  * overwriting whatever was there before.
+ *
+ * IMPROVED: It now ensures the 'data' directory exists before trying to write the file.
  */
 exports.updatePortfolio = async (req, res) => {
     try {
         const newPortfolioData = req.body;
 
-        // For better readability in the .txt file, we stringify the JSON with an
-        // indent of 2 spaces. This has no effect on the data itself.
+        // Check if the request body is empty. This can happen if the JSON middleware isn't working.
+        if (Object.keys(newPortfolioData).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Request body is empty. Ensure you are sending JSON data with the correct Content-Type header."
+            });
+        }
+        
+        // Step 1: Get the directory name from the full file path.
+        const dirName = path.dirname(portfolioFilePath);
+
+        // Step 2: Ensure the directory exists.
+        // The { recursive: true } option creates parent directories if needed and
+        // doesn't throw an error if the directory already exists.
+        await fs.mkdir(dirName, { recursive: true });
+
+        // Step 3: Stringify the JSON data for writing.
         const fileContent = JSON.stringify(newPortfolioData, null, 2);
 
-        // Write the stringified data to our file, overwriting it completely.
+        // Step 4: Write the file. This will now succeed.
         await fs.writeFile(portfolioFilePath, fileContent, 'utf8');
 
         res.status(200).json({
@@ -71,6 +91,7 @@ exports.updatePortfolio = async (req, res) => {
         });
 
     } catch (error) {
+        // Now, if an error still occurs, it's more likely a permissions issue.
         console.error('Error writing portfolio file:', error);
         res.status(500).json({
             success: false,

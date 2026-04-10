@@ -1,0 +1,37 @@
+{
+  "professionalSummary": "I am a highly skilled MERN stack developer with over 5 years of experience building scalable web applications. My expertise lies in creating efficient backends with Node.js and Express, and dynamic frontends with React.",
+  "skills": [
+    "React",
+    "Node.js",
+    "Express",
+    "MongoDB",
+    "JavaScript (ES6+)",
+    "REST APIs",
+    "GraphQL",
+    "TypeScript"
+  ],
+  "projects": [
+    {
+      "title": "E-commerce Platform",
+      "description": "Built a full-featured e-commerce site with product management, user authentication (JWT), and a Stripe-integrated checkout process.",
+      "technologies": [
+        "React",
+        "Redux",
+        "Node.js",
+        "Stripe API"
+      ],
+      "link": "http://example.com/ecommerce"
+    },
+    {
+      "title": "Real-time Analytics Dashboard",
+      "description": "Developed a dashboard using WebSockets to display live data visualizations for user activity.",
+      "technologies": [
+        "React",
+        "D3.js",
+        "Express",
+        "Socket.IO"
+      ],
+      "link": "http://example.com/dashboard"
+    }
+  ]
+}

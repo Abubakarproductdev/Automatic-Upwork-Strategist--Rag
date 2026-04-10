@@ -1,5 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config();
+
 const cors = require('cors');
 const colors = require('colors'); // For styled console logs
 const proposalRoutes = require('./routes/proposalRoutes');
@@ -8,7 +10,6 @@ const portfolioRoutes = require('./routes/portfolioRoutes'); // <-- ADD THIS LIN
 const aiRoutes = require('./routes/aiRoutes'); // <-- ADD THIS LINE
 
 // Load environment variables from .env file
-dotenv.config();
 
 // Connect to MongoDB
 connectDB();
