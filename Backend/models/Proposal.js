@@ -60,6 +60,10 @@ const proposalSchema = new Schema({
     hiredDate: Date,
 
     finalEarnings: Number, 
+    proposalText: {
+        type: String,
+        trim: true,
+    },
 }, {
     timestamps: true,
 });

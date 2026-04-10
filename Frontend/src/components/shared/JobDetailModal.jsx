@@ -41,14 +41,14 @@ export default function JobDetailModal({ job, onClose }) {
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
               <div className="flex items-center gap-1.5 font-medium text-slate-300">
                 <DollarSign className="w-4 h-4 text-emerald-400" />
-                {job.budget}
+                {job.budgetDisplay || 'N/A'}
               </div>
               <div className="flex items-center gap-1.5 font-medium text-slate-300">
-                <div className="bg-blue-500/20 text-blue-400 px-2 rounded-md font-bold">{job.connectsCost} Connects</div>
+                <div className="bg-blue-500/20 text-blue-400 px-2 rounded-md font-bold">{job.connectsCost || 0} Connects</div>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-slate-500" />
-                Applied {new Date(job.appliedAt).toLocaleDateString()}
+                Applied {job.appliedAt ? new Date(job.appliedAt).toLocaleDateString() : 'N/A'}
               </div>
             </div>
           </div>
