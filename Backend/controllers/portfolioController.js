@@ -1,5 +1,6 @@
 const fs = require('fs').promises; // <-- THIS IS THE FIX
 const path = require('path');
+const { validatePortfolioPayload } = require('../middleware/security');
 
 // Define the path to our context file. 
 // Using path.join makes it work on any operating system (Windows, Mac, Linux).
@@ -67,6 +68,16 @@ exports.updatePortfolio = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Request body is empty. Ensure you are sending JSON data with the correct Content-Type header."
+            });
+        }
+
+        const validation = validatePortfolioPayload(newPortfolioData);
+
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: validation.errors[0],
+                errors: validation.errors,
             });
         }
         

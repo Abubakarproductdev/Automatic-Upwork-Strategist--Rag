@@ -1,33 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
 import { CheckCircle2, Circle, Clock, Zap, Pencil, X } from 'lucide-react';
 import AddJobModal from '../components/shared/AddJobModal';
 import JobDetailModal from '../components/shared/JobDetailModal';
 
-// --- EMBEDDED EDIT MODAL ---
-const EditJobModal = ({ isOpen, onClose, job, onSave }) => {
-  const [formData, setFormData] = useState({});
+const PROPOSALS_CACHE_KEY = 'proposal-performance-cache-v1';
+const PROPOSALS_CACHE_TTL_MS = 5 * 60 * 1000;
 
-  // Flatten the incoming nested job object into a flat form state
-  useEffect(() => {
-    if (job) {
-      setFormData({
-        title: job.title || '',
-        status: job.status || 'submitted',
-        description: job.jobDetails?.description || '',
-        connectsCost: job.jobDetails?.connectsCost || 0,
-        jobPostedDate: job.jobDetails?.jobPostedDate ? new Date(job.jobDetails.jobPostedDate).toISOString().split('T')[0] : '',
-        clientRegion: job.clientInfo?.region || '',
-        clientRate: job.clientInfo?.hireRate || '',
-        amountSpent: job.clientInfo?.totalSpent || '',
-        clientAge: job.clientInfo?.memberSince || '',
-        clientStars: job.clientInfo?.rating || '',
-        isClientVerified: job.clientInfo?.isPaymentVerified || false,
-        budget: job.budget?.amount || '',
-        proposal: job.proposalText || '' // Display proposal text if it exists
-      });
+const loadCachedProposals = () => {
+  try {
+    const raw = localStorage.getItem(PROPOSALS_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.timestamp || !Array.isArray(parsed?.data)) return null;
+
+    if ((Date.now() - parsed.timestamp) > PROPOSALS_CACHE_TTL_MS) {
+      localStorage.removeItem(PROPOSALS_CACHE_KEY);
+      return null;
     }
-  }, [job]);
+
+    return parsed.data;
+  } catch {
+    localStorage.removeItem(PROPOSALS_CACHE_KEY);
+    return null;
+  }
+};
+
+const saveCachedProposals = (jobs) => {
+  localStorage.setItem(PROPOSALS_CACHE_KEY, JSON.stringify({
+    timestamp: Date.now(),
+    data: jobs,
+  }));
+};
+
+// --- EMBEDDED EDIT MODAL ---
+const buildEditFormData = (job) => ({
+  title: job?.title || '',
+  status: job?.status || 'submitted',
+  description: job?.jobDetails?.description || '',
+  connectsCost: job?.jobDetails?.connectsCost || 0,
+  jobPostedDate: job?.jobDetails?.jobPostedDate ? new Date(job.jobDetails.jobPostedDate).toISOString().split('T')[0] : '',
+  clientRegion: job?.clientInfo?.region || '',
+  clientRate: job?.clientInfo?.hireRate || '',
+  amountSpent: job?.clientInfo?.totalSpent || '',
+  clientAge: job?.clientInfo?.memberSince || '',
+  clientStars: job?.clientInfo?.rating || '',
+  isClientVerified: job?.clientInfo?.isPaymentVerified || false,
+  budget: job?.budget?.amount || '',
+  proposal: job?.proposalText || ''
+});
+
+const EditJobModal = ({ isOpen, onClose, job, onSave }) => {
+  const [formData, setFormData] = useState(() => buildEditFormData(job));
 
   if (!isOpen || !job) return null;
 
@@ -193,8 +218,8 @@ const EditJobModal = ({ isOpen, onClose, job, onSave }) => {
 
 // --- MAIN PAGE COMPONENT ---
 export default function ProposalPerformance() {
-  const [jobs, setJobs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [jobs, setJobs] = useState(() => loadCachedProposals() || []);
+  const [isLoading, setIsLoading] = useState(() => !loadCachedProposals());
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -217,26 +242,34 @@ export default function ProposalPerformance() {
   });
 
   // GET: Fetch all jobs
-  const fetchProposals = async () => {
+  const fetchProposals = useCallback(async () => {
     try {
+      const cached = loadCachedProposals();
+      if (cached) {
+        setJobs(cached);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/proposals');
       const data = await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Failed to fetch proposals.');
       }
-
-      setJobs(data.data.map(normalizeProposal));
+      const normalizedJobs = data.data.map(normalizeProposal);
+      setJobs(normalizedJobs);
+      saveCachedProposals(normalizedJobs);
     } catch (error) {
       console.error('Error fetching proposals:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchProposals();
-  }, []);
+  }, [fetchProposals]);
 
   // PUT: Update job
   const handleUpdateJob = async (id, updatedData) => {
@@ -249,7 +282,9 @@ export default function ProposalPerformance() {
       const data = await response.json();
       
       if (response.ok && data.success) {
-        setJobs(jobs.map(job => (job._id === id ? normalizeProposal(data.data) : job)));
+        const nextJobs = jobs.map(job => (job._id === id ? normalizeProposal(data.data) : job));
+        setJobs(nextJobs);
+        saveCachedProposals(nextJobs);
         setEditingJob(null);
       } else {
         alert('Failed to update job: ' + (data.message || 'Unknown error'));
@@ -343,11 +378,11 @@ export default function ProposalPerformance() {
                   {truncateTitle(job.title)}
                 </div>
                 
-                <div className="col-span-2 flex justify-center">
-                   <div className="bg-[#1e293b] px-3 py-1 rounded-full text-sm font-medium text-blue-400 border border-blue-500/20">
-                     {job.jobDetails?.connectsCost || 0}
-                   </div>
-                </div>
+        <div className="col-span-2 flex justify-center">
+           <div className="bg-[#1e293b] px-3 py-1 rounded-full text-sm font-medium text-blue-400 border border-blue-500/20">
+             {job.connectsCost || 0}
+           </div>
+        </div>
                 
                 <div className="col-span-2 flex justify-center items-center gap-2">
                   {job.status !== 'draft' ? (
@@ -388,9 +423,13 @@ export default function ProposalPerformance() {
 
       <AddJobModal 
         isOpen={isAddModalOpen} 
+        onCreated={(newJob) => {
+          const nextJobs = [normalizeProposal(newJob), ...jobs];
+          setJobs(nextJobs);
+          saveCachedProposals(nextJobs);
+        }}
         onClose={() => {
           setIsAddModalOpen(false);
-          fetchProposals(); 
         }} 
       />
       <JobDetailModal 
@@ -398,6 +437,7 @@ export default function ProposalPerformance() {
         onClose={() => setSelectedJob(null)} 
       />
       <EditJobModal 
+        key={editingJob?._id || 'edit-modal'}
         isOpen={!!editingJob} 
         job={editingJob} 
         onClose={() => setEditingJob(null)} 

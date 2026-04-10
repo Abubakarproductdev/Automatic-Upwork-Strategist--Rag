@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
-export default function AddJobModal({ isOpen, onClose }) {
+export default function AddJobModal({ isOpen, onClose, onCreated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -74,6 +74,7 @@ export default function AddJobModal({ isOpen, onClose }) {
           amountSpent: '', clientAge: '', clientStars: '', description: '', 
           proposal: '', jobPostedDate: new Date().toISOString().split('T')[0]
         });
+        onCreated?.(data.data);
         onClose(); 
       } else {
         alert('Failed to save job: ' + (data.message || data.error));

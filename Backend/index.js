@@ -5,6 +5,7 @@ dotenv.config({ path: path.join(__dirname, '.env'), quiet: true });
 
 const cors = require('cors');
 const colors = require('colors'); // For styled console logs
+const { createRateLimiter } = require('./middleware/security');
 const proposalRoutes = require('./routes/proposalRoutes');
 const connectDB = require('./Config/dbConfig');
 const portfolioRoutes = require('./routes/portfolioRoutes'); // <-- ADD THIS LINE
@@ -17,20 +18,39 @@ connectDB();
 
 // Initialize Express app
 const app = express();
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+const aiLimiter = createRateLimiter({
+    windowMs: 60 * 1000,
+    maxRequests: 20,
+    message: 'Too many AI generation requests. Please wait a moment and try again.',
+});
 
 // --- Middleware ---
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
 
 // 1. CORS (Cross-Origin Resource Sharing)
 // Your React frontend (e.g., on localhost:3000) will be on a different
 // "origin" than your backend (e.g., on localhost:5000). This middleware
 // allows the frontend to make API requests to the backend.
-app.use(cors());
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error('CORS origin not allowed.'));
+    },
+}));
 
 // 2. Body Parser
 // This allows the server to accept and parse JSON data in the body of requests.
 // Without this, `req.body` would be undefined.
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: false, limit: '100kb' }));
 
 
 // --- API Routes ---
@@ -40,7 +60,7 @@ app.use(express.urlencoded({ extended: false }));
 // it should use the 'proposalRoutes' router we defined earlier.
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/portfolio', portfolioRoutes); // <-- ADD THIS LINE
-app.use('/api/ai', aiRoutes); // <-- ADD THIS LINE
+app.use('/api/ai', aiLimiter, aiRoutes); // <-- ADD THIS LINE
 
 
 // --- Server Initialization ---

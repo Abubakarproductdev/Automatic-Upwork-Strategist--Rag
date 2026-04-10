@@ -1,5 +1,7 @@
 // Import the Proposal model we created. This is how we interact with the 'proposals' collection.
 const Proposal = require('../models/Proposal');
+const mongoose = require('mongoose');
+const { validateProposalPayload } = require('../middleware/security');
 
 /**
  * @desc    Create a new proposal.
@@ -16,6 +18,16 @@ const Proposal = require('../models/Proposal');
  */
 exports.createProposal = async (req, res) => {
     try {
+        const validation = validateProposalPayload(req.body);
+
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: validation.errors[0],
+                errors: validation.errors,
+            });
+        }
+
         // req.body will contain all the data sent from your React form.
         // We create a new Proposal document in memory using this data.
         const newProposal = new Proposal(req.body);
@@ -76,6 +88,13 @@ exports.getAllProposals = async (req, res) => {
  */
 exports.getProposalById = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid proposal ID.',
+            });
+        }
+
         const proposal = await Proposal.findById(req.params.id);
 
         if (!proposal) {
@@ -109,6 +128,23 @@ exports.getProposalById = async (req, res) => {
  */
 exports.updateProposal = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid proposal ID.',
+            });
+        }
+
+        const validation = validateProposalPayload(req.body);
+
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: validation.errors[0],
+                errors: validation.errors,
+            });
+        }
+
         // Find the proposal by the ID passed in the URL
         const proposal = await Proposal.findById(req.params.id);
 
@@ -156,6 +192,13 @@ exports.updateProposal = async (req, res) => {
  */
 exports.deleteProposal = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid proposal ID.',
+            });
+        }
+
         const proposal = await Proposal.findByIdAndDelete(req.params.id);
 
         if (!proposal) {

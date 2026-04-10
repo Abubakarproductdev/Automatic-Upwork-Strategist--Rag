@@ -85,6 +85,14 @@ exports.generateProposal = async (req, res) => {
         return res.status(400).json({ success: false, message: "Job description is required." });
     }
 
+    if (typeof jobDescription !== 'string' || jobDescription.trim().length < 20) {
+        return res.status(400).json({ success: false, message: 'Job description must be at least 20 characters long.' });
+    }
+
+    if (jobDescription.length > 15000) {
+        return res.status(400).json({ success: false, message: 'Job description is too long.' });
+    }
+
     try {
         const genAI = getGenAIClient();
 
@@ -111,6 +119,7 @@ exports.generateProposal = async (req, res) => {
 
         // 4. Try Primary Model (Gemini 3 Flash)
         let responseText;
+        let modelUsed = PRIMARY_MODEL;
         try {
             console.log(`Attempting generation with ${PRIMARY_MODEL}...`);
             const model = genAI.getGenerativeModel({ 
@@ -129,6 +138,7 @@ exports.generateProposal = async (req, res) => {
             console.warn(`Primary model failed (Rate limit or error). Falling back to ${FALLBACK_MODEL}...`);
             
             // 5. Fallback Mechanism (Gemini 1.5 Flash)
+            modelUsed = FALLBACK_MODEL;
             const fallbackModel = genAI.getGenerativeModel({ 
                 model: FALLBACK_MODEL,
                 systemInstruction: systemInstruction,
@@ -144,7 +154,7 @@ exports.generateProposal = async (req, res) => {
         // 6. Send it to the frontend dashboard
         res.status(200).json({
             success: true,
-            modelUsed: responseText.includes(PRIMARY_MODEL) ? PRIMARY_MODEL : FALLBACK_MODEL, // Optional tracking
+            modelUsed,
             data: proposalData
         });
 
