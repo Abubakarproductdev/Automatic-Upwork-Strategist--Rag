@@ -48,7 +48,10 @@ const getSystemContext = async () => {
             
             RULES FOR WRITING:
             1. NO greetings like "Hi", "Hello", or "Dear Hiring Manager". 
-            2. The very first sentence MUST be a 'Hook' that directly addresses the client's biggest technical or business problem.
+            2. The very first sentence MUST be a 'Hook' that directly addresses the client's biggest technical or business problem. for example,Hi Mark — I can build this WordPress plugin to import CSVs and map fields — I’ve done 7 similar imports for ecommerce stores (example attached).”
+•	“Hi Sara — I can write a landing page that converts your trial users into paying customers (I increased conversions 24% for Client X).”
+Make the very first two lines a one-sentence solution + one proof point — that’s the mobile preview and it must hook.
+
             3. Briefly explain the exact procedure to solve their problem.
             4. Include ONLY ONE relevant project from the Knowledge Base (e.g., SIVO for AI/React, AgriMind for multi-agent, or the 3D Miswak/Marker models for CAD) in exactly 2 lines to prove competence.
             5. Never hallucinate skills outside the Knowledge Base.
@@ -63,10 +66,10 @@ const getSystemContext = async () => {
  */
 const analyzePersona = (jobDescription) => {
     const text = jobDescription.toLowerCase();
-    
+
     // Scan for technical jargon
     const isTechnical = text.includes('api') || text.includes('react') || text.includes('architecture') || text.includes('solidworks') || text.includes('pine script');
-    
+
     if (isTechnical) {
         return "PERSONA INSTRUCTION: The client is highly technical. Use strict engineering terms, mention specific frameworks, and keep the tone analytical and precise.";
     } else {
@@ -98,7 +101,7 @@ exports.generateProposal = async (req, res) => {
 
         // 1. Get Muhammad's entire history and rules (The Brain)
         const systemInstruction = await getSystemContext();
-        
+
         // 2. Figure out who we are talking to
         const persona = analyzePersona(jobDescription);
 
@@ -122,7 +125,7 @@ exports.generateProposal = async (req, res) => {
         let modelUsed = PRIMARY_MODEL;
         try {
             console.log(`Attempting generation with ${PRIMARY_MODEL}...`);
-            const model = genAI.getGenerativeModel({ 
+            const model = genAI.getGenerativeModel({
                 model: PRIMARY_MODEL,
                 systemInstruction: systemInstruction,
                 generationConfig: { responseMimeType: "application/json" } // Forces JSON output
@@ -136,10 +139,10 @@ exports.generateProposal = async (req, res) => {
             }
 
             console.warn(`Primary model failed (Rate limit or error). Falling back to ${FALLBACK_MODEL}...`);
-            
+
             // 5. Fallback Mechanism (Gemini 1.5 Flash)
             modelUsed = FALLBACK_MODEL;
-            const fallbackModel = genAI.getGenerativeModel({ 
+            const fallbackModel = genAI.getGenerativeModel({
                 model: FALLBACK_MODEL,
                 systemInstruction: systemInstruction,
                 generationConfig: { responseMimeType: "application/json" }
