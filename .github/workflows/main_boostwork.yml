@@ -7,20 +7,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create deployment package
-        run: |
-          cd Backend
-          zip -r ../deploy.zip . -x "node_modules/*" ".env" ".git/*"
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
 
+      # THIS STEP IS REMOVED. Do NOT run npm install here.
+      # Azure will run it for us on the server.
+      #
+      # - name: npm install
+      #   working-directory: Backend
+      #   run: npm install
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app
+          # We now upload the source code WITHOUT node_modules
+          path: Backend/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -28,9 +54,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A6984B9634D84A48ACE6F5728AC610BB }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A174D98861964751BD0689C84924E210 }}
 
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'BoostWork'
           slot-name: 'Production'
-          package: deploy.zip
+          package: .
