@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy Node.js app to Azure Web App - Final
 
 on:
@@ -13,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -23,31 +20,35 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      # 👇 IMPORTANT: run everything inside Backend folder
+      - name: Install, build, test (Backend)
+        working-directory: Backend
         run: |
           npm install
           npm run build --if-present
           npm run test --if-present
 
-      - name: Upload artifact for deployment job
+      # 👇 Upload ONLY Backend folder
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: Backend
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read 
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
-      
+          path: Backend
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -55,11 +56,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6AC6D5E06D214CF684A65B4AB7579E1E }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AC479B5331E54597B1E1FE62C49BC503 }}
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
+      # 👇 Deploy ONLY Backend folder
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Final'
           slot-name: 'Production'
-          package: .
-          
+          package: Backend
