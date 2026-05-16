@@ -16,7 +16,6 @@ export default function CustomizeDetails() {
   const [projects, setProjects] = useState([]);
   const [links, setLinks] = useState([]);
 
-  // --- GET DATA FROM BACKEND ---
   useEffect(() => {
     const fetchPortfolioData = async () => {
       try {
@@ -29,14 +28,12 @@ export default function CustomizeDetails() {
           
           if (data.data.links) setLinks(data.data.links);
 
-          // MAP PROJECTS: Convert JSON structure to Frontend state
           if (data.data.projects) {
             const mappedProjects = data.data.projects.map((p, index) => ({
-              id: p.id || Date.now() + index, // Give it an ID for React rendering
-              title: p.title || p.name || '', // Handle legacy 'name' just in case
+              id: p.id || Date.now() + index, 
+              title: p.title || p.name || '', 
               description: p.description || '',
               link: p.link || '',
-              // Convert the backend Array ["React", "Node"] to a String "React, Node"
               tech: Array.isArray(p.technologies) 
                 ? p.technologies.join(', ') 
                 : (p.tech || '') 
@@ -45,7 +42,6 @@ export default function CustomizeDetails() {
           }
 
         } else {
-          // Empty state defaults
           setProjects([{ id: Date.now(), title: '', description: '', tech: '', link: '' }]);
           setLinks([{ id: Date.now(), name: '', url: '' }]);
         }
