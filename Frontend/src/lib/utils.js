@@ -5,4 +5,4 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export const API_BASE = "https://boostworks-hvgxe2dcemf2hnf0.southeastasia-01.azurewebsites.net";
+export const API_BASE = "https://upworkproposalmaker-azbuf5gqbdanfbhh.centralindia-01.azurewebsites.net";
