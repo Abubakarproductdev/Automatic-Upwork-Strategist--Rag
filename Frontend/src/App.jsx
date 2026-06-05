@@ -7,8 +7,17 @@ import ProposalWriting from './pages/ProposalWriting';
 import ClientLeadGeneration from './pages/ClientLeadGeneration';
 import CustomizeDetails from './pages/CustomizeDetails';
 import { JobProvider } from './context/JobContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import PromptSettings from './pages/PromptSettings';
 
-function App() {
+function AuthenticatedApp() {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
   return (
     <JobProvider>
       <BrowserRouter>
@@ -19,10 +28,19 @@ function App() {
             <Route path="write" element={<ProposalWriting />} />
             <Route path="leads" element={<ClientLeadGeneration />} />
             <Route path="profile" element={<CustomizeDetails />} />
+            <Route path="ai-prompts" element={<PromptSettings />} />
           </Route>
         </Routes>
       </BrowserRouter>
     </JobProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
   );
 }
 

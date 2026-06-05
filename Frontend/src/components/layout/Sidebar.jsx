@@ -1,15 +1,18 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, PenTool, MessageSquarePlus, UserCircle, Zap } from 'lucide-react';
+import { FileSliders, LayoutDashboard, FileText, LogOut, PenTool, MessageSquarePlus, UserCircle, Zap } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar() {
+  const { logout, user } = useAuth();
   const navItems = [
     { name: 'Overall Performance', path: '/', icon: LayoutDashboard },
     { name: 'Proposal Performance', path: '/proposals', icon: FileText },
     { name: 'Proposal Writing', path: '/write', icon: PenTool },
     { name: 'Client Lead Gen', path: '/leads', icon: MessageSquarePlus },
     { name: 'Customize Details', path: '/profile', icon: UserCircle },
+    { name: 'AI Prompts', path: '/ai-prompts', icon: FileSliders },
   ];
 
   return (
@@ -55,10 +58,18 @@ export default function Sidebar() {
           <div className="w-9 h-9 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0 border border-yellow-500/30">
             <UserCircle className="w-5 h-5 text-yellow-400" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-white">Shahid R.</span>
-            <span className="text-xs text-stone-400">Pro Strategist</span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold text-white truncate">{user?.name || 'Strategist'}</span>
+            <span className="text-xs text-stone-400 truncate">{user?.email || 'Local account'}</span>
           </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="ml-auto p-2 text-stone-500 hover:text-amber-300 hover:bg-[#292524] rounded-lg transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </aside>

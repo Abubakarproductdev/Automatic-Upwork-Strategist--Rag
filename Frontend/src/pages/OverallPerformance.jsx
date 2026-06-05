@@ -21,7 +21,7 @@ export default function OverallPerformance() {
       try {
         const diff = differenceInDays(now, parseISO(job.appliedAt));
         return diff <= timeframe;
-      } catch (e) {
+      } catch {
         return false;
       }
     });
